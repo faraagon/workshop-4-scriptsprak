@@ -20,8 +20,15 @@ foreach ($file in $allConfigs) {
     Write-Host "$($file.Name) - $([math]::Round($file.Length / 1KB, 2)) KB - ändrad: $($file.LastWriteTime)"
 }
 
+Write-Host ""
+
+
+
+
+
+
 #Section for recently modified files
-Write-Host "2. Filer ändrade de senaste 7 dagarna"
+Write-Host "Filer ändrade de senaste 7 dagarna"
 Write-Host "--------------------"
 
 #Go through network_configs and get files
@@ -43,6 +50,11 @@ foreach ($file in $recentFiles) {
 }
 
 Write-Host ""
+
+
+
+
+
 
 #Fetch all the files in network_configs and folders
 $files = Get-ChildItem -Path "network_configs" -Recurse -File
@@ -72,7 +84,7 @@ foreach ($file in $files) {
 }
 
 #Print out result
-Write-Host "FILTYPER OCH TOTAL STORLEK:"
+Write-Host "Filtyper och storlek:"
 Write-Host "---------------"
 foreach ($extension in $fileTypeInfo.Keys) {
     $roundedSize = [math]::Round($fileTypeInfo[$extension].SizeKB, 2)
@@ -80,8 +92,35 @@ foreach ($extension in $fileTypeInfo.Keys) {
 }
 
 
+
+
+
 Write-Host ""
-Write-Host "IP-ADRESSER I KONFIGURATIONSFILER"
+
+
+Write-Host "De 5 största loggfilerna"
+Write-Host "---------------"
+
+#Fetch the files with .log extension
+$largestLogs = Get-ChildItem -Path "network_configs" -Filter "*.log" -Recurse -File |
+
+#Sort them in size, biggest first
+Sort-Object Length -Descending |
+
+#Select the 5 largest
+Select-Object -First 5
+
+#Loop through the list and calculate the size in MB
+#Print out the file name and size in MB with 5 decimals
+foreach ($log in $largestLogs) {
+    $sizeMB = [math]::Round($log.Length / 1MB, 5)
+    Write-Host "$($log.Name) - $sizeMB MB"
+}
+Write-Host ""
+
+
+Write-Host ""
+Write-Host "IP-adresser i konfigurationsfiler"
 Write-Host "--------------------"
 
 #Search through .conf files and look for IP patterns
@@ -97,6 +136,6 @@ Write-Host "Hittade IP-adresser:"
 foreach ($ip in $uniqueIPs) {
     Write-Host $ip
 }
-
+Write-Host ""
 Write-Host "Totalt: $($uniqueIPs.Count) unika IP-adresser hittade"
 
