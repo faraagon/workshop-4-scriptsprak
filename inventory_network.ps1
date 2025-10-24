@@ -42,5 +42,42 @@ foreach ($file in $recentFiles) {
     Write-Host "$($file.Name) - ändrad: $($file.LastWriteTime)"
 }
 
+Write-Host ""
+
+#Fetch all the files in network_configs and folders
+$files = Get-ChildItem -Path "network_configs" -Recurse -File
+
+#Empty list to hold file extensions
+$fileTypeInfo = @{}
+
+#Loop through all the files
+foreach ($file in $files) {
+    #Get the file extension
+    $extension = $file.Extension
+
+    #If extension is not yet on the list, add it
+    if (-not $fileTypeInfo.ContainsKey($extension)) {
+        #Create a post for the extension
+        $fileTypeInfo[$extension] = @{
+            Count  = 0
+            SizeKB = 0
+        }
+    }
+
+    # Add 1 to the counter of this extension
+    $fileTypeInfo[$extension].Count++
+
+    # Add filesize in KB to the total for this extension
+    $fileTypeInfo[$extension].SizeKB += ($file.Length / 1KB)
+}
+
+#Print out result
+Write-Host "FILTYPER OCH TOTAL STORLEK:"
+Write-Host "---------------"
+foreach ($extension in $fileTypeInfo.Keys) {
+    $roundedSize = [math]::Round($fileTypeInfo[$extension].SizeKB, 2)
+    Write-Host "$extension : $($fileTypeInfo[$extension].Count) filer - totalt $roundedSize KB"
+}
+
 
 
