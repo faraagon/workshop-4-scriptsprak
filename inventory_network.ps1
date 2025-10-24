@@ -80,4 +80,23 @@ foreach ($extension in $fileTypeInfo.Keys) {
 }
 
 
+Write-Host ""
+Write-Host "IP-ADRESSER I KONFIGURATIONSFILER"
+Write-Host "--------------------"
+
+#Search through .conf files and look for IP patterns
+$ipMatches = Get-ChildItem -Path "network_configs" -Recurse -Filter "*.conf" |
+Select-String -Pattern "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+
+#Extract only the unique IP addresses from the matches
+$uniqueIPs = $ipMatches | Select-Object -ExpandProperty Matches | 
+ForEach-Object { $_.Value } | Sort-Object -Unique
+
+#Print out the found IP addresses
+Write-Host "Hittade IP-adresser:"
+foreach ($ip in $uniqueIPs) {
+    Write-Host $ip
+}
+
+Write-Host "Totalt: $($uniqueIPs.Count) unika IP-adresser hittade"
 
