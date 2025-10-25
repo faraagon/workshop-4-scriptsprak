@@ -62,6 +62,7 @@ $files = Get-ChildItem -Path "network_configs" -Recurse -File
 #Empty list to hold file extensions
 $fileTypeInfo = @{}
 
+
 #Loop through all the files
 foreach ($file in $files) {
     #Get the file extension
@@ -90,7 +91,11 @@ foreach ($extension in $fileTypeInfo.Keys) {
     $roundedSize = [math]::Round($fileTypeInfo[$extension].SizeKB, 2)
     Write-Host "$extension : $($fileTypeInfo[$extension].Count) filer - totalt $roundedSize KB"
 }
+Write-Host ""
+$totalFiles = ($files | Measure-Object).Count
+$totalSize = [math]::Round(($files | Measure-Object Length -Sum).Sum / 1KB, 2)
 
+Write-Host "Totalt antal filer: $totalFiles filer, total storlek: $totalSize KB"
 
 
 
@@ -165,3 +170,32 @@ foreach ($log in $logFiles) {
     #Print out the result
     Write-Host "$($log.Name): ERROR=$errorCount, FAILED=$failedCount, DENIED=$deniedCount"
 }
+
+
+
+#Export file inventory to CSV
+$allConfigs | Select-Object Name, FullName, 
+@{Name = "SizeKB"; Expression = { [math]::Round($_.Length / 1KB, 2) } }, 
+LastWriteTime |
+Export-Csv -Path "config_inventory.csv" -NoTypeInformation
+
+#Export IP addresses found
+$uniqueIPs | ForEach-Object { [PSCustomObject]@{IPAddress = $_ } } |
+Export-Csv -Path "found_ips.csv" -NoTypeInformation
+
+#Export log file issues 
+$logReport = @()
+foreach ($log in $logFiles) {
+    $content = Get-Content $log.FullName
+    $errorCount = ($content | Select-String -Pattern "ERROR" -SimpleMatch).Count
+    $failedCount = ($content | Select-String -Pattern "FAILED" -SimpleMatch).Count
+    $deniedCount = ($content | Select-String -Pattern "DENIED" -SimpleMatch).Count
+    
+    $logReport += [PSCustomObject]@{
+        FileName = $log.Name
+        Errors   = $errorCount
+        Failed   = $failedCount
+        Denied   = $deniedCount
+    }
+}
+$logReport | Export-Csv -Path "log_summary.csv" -NoTypeInformation
