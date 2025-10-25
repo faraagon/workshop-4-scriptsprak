@@ -119,6 +119,8 @@ foreach ($log in $largestLogs) {
 Write-Host ""
 
 
+
+
 Write-Host ""
 Write-Host "IP-adresser i konfigurationsfiler"
 Write-Host "--------------------"
@@ -139,3 +141,27 @@ foreach ($ip in $uniqueIPs) {
 Write-Host ""
 Write-Host "Totalt: $($uniqueIPs.Count) unika IP-adresser hittade"
 
+
+
+
+
+Write-Host ""
+Write-Host "Säkerhetsproblem i loggfiler"
+Write-Host "--------------------"
+
+#Find all the log files
+$logFiles = Get-ChildItem -Path "network_configs" -Recurse -Filter "*.log"
+
+#Loop through the files
+foreach ($log in $logFiles) {
+    #Reads the content of the file, line by line
+    $content = Get-Content $log.FullName
+
+    #Count how many times certain words appear in the files
+    $errorCount = ($content | Select-String -Pattern "ERROR"  -SimpleMatch).Count
+    $failedCount = ($content | Select-String -Pattern "FAILED" -SimpleMatch).Count
+    $deniedCount = ($content | Select-String -Pattern "DENIED" -SimpleMatch).Count
+
+    #Print out the result
+    Write-Host "$($log.Name): ERROR=$errorCount, FAILED=$failedCount, DENIED=$deniedCount"
+}
